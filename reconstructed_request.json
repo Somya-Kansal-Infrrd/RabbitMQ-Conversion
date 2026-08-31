@@ -1,0 +1,57 @@
+{
+  "requestId": "d75a84af-cbe5-4d92-85b7-4558f533287b",
+  "status": "PROCESSING_COMPLETED",
+  "documents": [
+    {
+      "id": "d75a84af-cbe5-4d92-85b7-4558f533287b_document-1",
+      "name": "image-20260420-124557.png",
+      "fileType": "image",
+      "status": "PROCESSING_COMPLETED",
+      "subStatus": "Extraction only",
+      "docType": "Invoice",
+      "splitLevel": "0",
+      "alphaId": "d75a84af-cbe5-4d92-85b7-4558f533287b_document-1",
+      "fields": [
+        {
+          "name": "Invoice Number",
+          "type": "Single Value",
+          "dataType": "string",
+          "confidence": 0,
+          "value": "",
+          "isCorrected": false
+        },
+        {
+          "name": "Invoice Date",
+          "type": "Single Value",
+          "dataType": "date",
+          "confidence": 0,
+          "value": "",
+          "isCorrected": false
+        }
+      ],
+      "pages": [
+        {
+          "id": "d75a84af-cbe5-4d92-85b7-4558f533287b_document-1_page-1",
+          "pageNumber": 1,
+          "status": "PAGE_COMPLETED",
+          "dpiRes": "72.009",
+          "rotation": "360"
+        }
+      ],
+      "documentExtractionStartDate": {
+        "$date": "2026-08-25T09:46:23.787Z"
+      },
+      "documentReceivedDate": {
+        "$date": "2026-08-24T06:59:11.138Z"
+      },
+      "lastModifiedDate": {
+        "$date": "2026-08-25T09:46:53.060Z"
+      },
+      "sourceDocumentUrl": "https://app.dev.infrrd.cloud/doc/get/522d0b7f-77e8-4e94-98fb-34cd7e17622d/2026/8/24/d75a84af-cbe5-4d92-85b7-4558f533287b/d75a84af-cbe5-4d92-85b7-4558f533287b_document-1/image/image-20260420-124557.png",
+      "isDocSigned": false,
+      "version": 1,
+      "docSigned": false,
+      "totalPages": 1
+    }
+  ]
+}
