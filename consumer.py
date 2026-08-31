@@ -2,9 +2,8 @@ import json
 import pika
 
 
-# --------------------------------
 # Load JSON files
-# --------------------------------
+
 
 with open("document.json", "r") as file:
     documents = json.load(file)
@@ -21,10 +20,7 @@ print("Total documents:", len(documents))
 print("Total pages:", len(pages))
 print("Total extraction fields:", len(extraction_fields))
 
-
-# --------------------------------
 # Connect to RabbitMQ
-# --------------------------------
 
 connection = pika.BlockingConnection(
     pika.ConnectionParameters("localhost")
@@ -32,19 +28,14 @@ connection = pika.BlockingConnection(
 
 channel = connection.channel()
 
-
-# --------------------------------
 # Create queue
-# --------------------------------
 
 channel.queue_declare(
     queue="document_reconstruction"
 )
 
 
-# --------------------------------
 # Message processing function
-# --------------------------------
 
 def process_message(ch, method, properties, body):
 
@@ -56,10 +47,7 @@ def process_message(ch, method, properties, body):
     print("\nReceived document ID:")
     print(document_id)
 
-
-    # --------------------------------
     # Find document
-    # --------------------------------
 
     document_data = None
 
@@ -81,14 +69,10 @@ def process_message(ch, method, properties, body):
 
         return
 
-
     print("\nDocument found:")
     print(document_data["_id"])
 
-
-    # --------------------------------
     # Find pages
-    # --------------------------------
 
     document_pages = []
 
@@ -98,16 +82,9 @@ def process_message(ch, method, properties, body):
 
             document_pages.append(page)
 
+    print("Pages found:",len(document_pages))
 
-    print(
-        "Pages found:",
-        len(document_pages)
-    )
-
-
-    # --------------------------------
     # Find extraction fields
-    # --------------------------------
 
     document_fields = []
 
@@ -118,15 +95,9 @@ def process_message(ch, method, properties, body):
             document_fields.append(field)
 
 
-    print(
-        "Extraction fields found:",
-        len(document_fields)
-    )
+    print("Extraction fields found:",len(document_fields))
 
-
-    # --------------------------------
     # Build fields
-    # --------------------------------
 
     fields = []
 
@@ -134,43 +105,22 @@ def process_message(ch, method, properties, body):
 
         field = {
 
-            "name": extraction.get(
-                "fieldName",
-                ""
-            ),
+            "name": extraction.get("fieldName",""),
 
-            "type": extraction.get(
-                "fieldType",
-                ""
-            ),
+            "type": extraction.get("fieldType",""),
 
-            "dataType": extraction.get(
-                "dataType",
-                ""
-            ),
+            "dataType": extraction.get("dataType",""),
 
-            "confidence": extraction.get(
-                "confidence",
-                0
-            ),
+            "confidence": extraction.get("confidence",0),
 
-            "value": extraction.get(
-                "value",
-                ""
-            ),
+            "value": extraction.get("value",""),
 
-            "isCorrected": extraction.get(
-                "isCorrected",
-                False
-            )
+            "isCorrected": extraction.get("isCorrected",False)
         }
 
         fields.append(field)
 
-
-    # --------------------------------
     # Build pages
-    # --------------------------------
 
     request_pages = []
 
@@ -178,162 +128,81 @@ def process_message(ch, method, properties, body):
 
         request_page = {
 
-            "id": page.get(
-                "_id",
-                ""
-            ),
+            "id": page.get("_id",""),
 
-            "pageNumber": page.get(
-                "pageNumber",
-                0
-            ),
+            "pageNumber": page.get("pageNumber",0),
 
-            "status": page.get(
-                "status",
-                ""
-            ),
+            "status": page.get("status",""),
 
-            "dpiRes": page.get(
-                "dpiRes",
-                ""
-            ),
+            "dpiRes": page.get("dpiRes",""),
 
-            "rotation": page.get(
-                "rotation",
-                ""
-            )
+            "rotation": page.get("rotation","")
         }
 
         request_pages.append(request_page)
 
-
-    # --------------------------------
     # Build document
-    # --------------------------------
 
     request_document = {
 
-        "id": document_data.get(
-            "_id",
-            ""
-        ),
+        "id": document_data.get("_id",""),
 
-        "name": document_data.get(
-            "fileName",
-            ""
-        ),
+        "name": document_data.get("fileName",""),
 
-        "fileType": document_data.get(
-            "fileType",
-            ""
-        ),
+        "fileType": document_data.get("fileType",""),
 
-        "status": document_data.get(
-            "status",
-            ""
-        ),
+        "status": document_data.get("status",""),
 
-        "subStatus": document_data.get(
-            "subStatus",
-            ""
-        ),
+        "subStatus": document_data.get("subStatus",""),
 
-        "docType": document_data.get(
-            "docType",
-            ""
-        ),
+        "docType": document_data.get("docType",""),
 
-        "splitLevel": document_data.get(
-            "splitLevel",
-            "0"
-        ),
+        "splitLevel": document_data.get("splitLevel","0"),
 
-        "alphaId": document_data.get(
-            "_id",
-            ""
-        ),
+        "alphaId": document_data.get("_id",""),
 
         "fields": fields,
 
         "pages": request_pages,
 
         "documentExtractionStartDate":
-            document_data.get(
-                "documentExtractionStartDate",
-                ""
-            ),
+            document_data.get("documentExtractionStartDate",""),
 
-        "documentReceivedDate":
-            document_data.get(
-                "documentReceivedDate",
-                ""
-            ),
+        "documentReceivedDate":document_data.get("documentReceivedDate",""),
 
         "lastModifiedDate":
-            document_data.get(
-                "lastModifiedDate",
-                ""
-            ),
+            document_data.get("lastModifiedDate",""),
 
         "sourceDocumentUrl":
-            document_data.get(
-                "sourceDocumentUrl",
-                ""
-            ),
+            document_data.get("sourceDocumentUrl", ""),
 
         "isDocSigned":
-            document_data.get(
-                "isDocSigned",
-                False
-            ),
+            document_data.get("isDocSigned",False),
 
         "version":
-            document_data.get(
-                "version",
-                1
-            ),
+            document_data.get("version",1),
 
         "docSigned":
-            document_data.get(
-                "docSigned",
-                False
-            ),
+            document_data.get("docSigned",False),
 
         "totalPages":
-            document_data.get(
-                "totalPages",
-                0
-            )
+            document_data.get("totalPages", 0)
     }
 
-
-    # --------------------------------
     # Build original request
-    # --------------------------------
+    
 
     original_request = {
-
         "requestId":
-            document_data.get(
-                "requestId",
-                ""
-            ),
+            document_data.get("requestId",""),
 
         "status":
-            document_data.get(
-                "status",
-                ""
-            ),
+            document_data.get("status",""),
 
-        "documents": [
-            request_document
-        ]
+        "documents": [request_document]
     }
 
-
-    # --------------------------------
     # Print result
-    # --------------------------------
 
     print("\nORIGINAL REQUEST BODY")
 
@@ -345,16 +214,10 @@ def process_message(ch, method, properties, body):
         )
     )
 
-
-    # --------------------------------
     # Save result
-    # --------------------------------
 
     with open(
-        "reconstructed_request.json",
-        "w"
-    ) as file:
-
+        "reconstructed_request.json","w") as file:
         json.dump(
             original_request,
             file,
@@ -362,28 +225,18 @@ def process_message(ch, method, properties, body):
             default=str
         )
 
-
-    print(
-        "\nReconstructed request saved!"
-    )
-
-
-    # --------------------------------
+    print("\nReconstructed request saved!")
+    
     # Tell RabbitMQ message is done
-    # --------------------------------
-
+    
     ch.basic_ack(
         delivery_tag=method.delivery_tag
     )
 
-    print(
-        "Message processed successfully!"
-    )
+    print("Message processed successfully!")
 
-
-# --------------------------------
 # Start consuming
-# --------------------------------
+
 
 channel.basic_consume(
     queue="document_reconstruction",
