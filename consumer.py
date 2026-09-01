@@ -1,6 +1,8 @@
 import json
 import pika
+import sys
 
+consumer_name = sys.argv[1] if len(sys.argv) > 1 else "Consumer"
 
 # Load JSON files
 
@@ -31,13 +33,16 @@ channel = connection.channel()
 # Create queue
 
 channel.queue_declare(
-    queue="document_reconstruction"
+    queue="document_reconstruction",
+    durable=True
 )
 
 
 # Message processing function
 
 def process_message(ch, method, properties, body):
+
+    print(f"\n{consumer_name} received a message")
 
     # Convert RabbitMQ message from JSON string to Python dictionary
     message = json.loads(body)
@@ -216,16 +221,18 @@ def process_message(ch, method, properties, body):
 
     # Save result
 
-    with open(
-        "reconstructed_request.json","w") as file:
-        json.dump(
-            original_request,
-            file,
-            indent=2,
-            default=str
-        )
+    output_file = f"reconstructed_{document_id}.json"
 
-    print("\nReconstructed request saved!")
+    with open(output_file,"w") as file:
+
+        json.dump(
+          original_request,
+          file,
+          indent=2,
+          default=str
+    )
+
+    print(f"\nReconstructed request saved to {output_file}!")
     
     # Tell RabbitMQ message is done
     

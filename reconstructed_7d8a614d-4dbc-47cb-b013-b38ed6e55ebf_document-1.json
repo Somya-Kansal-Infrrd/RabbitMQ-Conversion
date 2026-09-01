@@ -1,0 +1,57 @@
+{
+  "requestId": "7d8a614d-4dbc-47cb-b013-b38ed6e55ebf",
+  "status": "PROCESSING_COMPLETED",
+  "documents": [
+    {
+      "id": "7d8a614d-4dbc-47cb-b013-b38ed6e55ebf_document-1",
+      "name": "23029518_INV-12608-test.pdf",
+      "fileType": "pdf",
+      "status": "PROCESSING_COMPLETED",
+      "subStatus": "No correction needed",
+      "docType": "Invoice",
+      "splitLevel": "0",
+      "alphaId": "7d8a614d-4dbc-47cb-b013-b38ed6e55ebf_document-1",
+      "fields": [
+        {
+          "name": "Invoice Number",
+          "type": "Single Value",
+          "dataType": "string",
+          "confidence": 0.9672800009451304,
+          "value": "INV-12608",
+          "isCorrected": false
+        },
+        {
+          "name": "Invoice Date",
+          "type": "Single Value",
+          "dataType": "date",
+          "confidence": 0.9905535147018958,
+          "value": "9 Sep 2025",
+          "isCorrected": false
+        }
+      ],
+      "pages": [
+        {
+          "id": "7d8a614d-4dbc-47cb-b013-b38ed6e55ebf_document-1_page-1",
+          "pageNumber": 1,
+          "status": "PAGE_COMPLETED",
+          "dpiRes": "300",
+          "rotation": "0.1897"
+        }
+      ],
+      "documentExtractionStartDate": {
+        "$date": "2026-08-31T04:27:52.519Z"
+      },
+      "documentReceivedDate": {
+        "$date": "2026-08-31T04:27:51.066Z"
+      },
+      "lastModifiedDate": {
+        "$date": "2026-08-31T04:28:42.848Z"
+      },
+      "sourceDocumentUrl": "https://app.dev.infrrd.cloud/doc/get/7f7a92ba-b661-46a2-8c24-8cc6cbff7534/2026/8/31/7d8a614d-4dbc-47cb-b013-b38ed6e55ebf/7d8a614d-4dbc-47cb-b013-b38ed6e55ebf_document-1/source/23029518_INV-12608-test.pdf",
+      "isDocSigned": false,
+      "version": 1,
+      "docSigned": false,
+      "totalPages": 1
+    }
+  ]
+}
