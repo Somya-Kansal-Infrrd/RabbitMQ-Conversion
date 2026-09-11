@@ -1,72 +1,62 @@
+"""RabbitMQ consumer for document reconstruction."""
+
 import json
-import pika
 import sys
+from services.data.data_service import load_json_file
+from services.document.document_service import find_document
+from services.field.field_service import find_fields, build_fields
+from services.output.output_service import save_output
+from services.page.page_service import find_pages, build_pages
+from configs.log import get_logger
+from services.rabbitmq.consumer_service import start_consumer
+from services.reconstruction.reconstruction_service import (
+    build_document,
+    build_request
+)
+
 
 consumer_name = sys.argv[1] if len(sys.argv) > 1 else "Consumer"
 
+logger = get_logger(__name__)
+
+
 # Load JSON files
 
+documents = load_json_file("document.json")
+pages = load_json_file("page.json")
+extraction_fields = load_json_file("extraction_field.json")
 
-with open("document.json", "r") as file:
-    documents = json.load(file)
-
-with open("page.json", "r") as file:
-    pages = json.load(file)
-
-with open("extraction_field.json", "r") as file:
-    extraction_fields = json.load(file)
-
-
-print("JSON files loaded")
-print("Total documents:", len(documents))
-print("Total pages:", len(pages))
-print("Total extraction fields:", len(extraction_fields))
-
-# Connect to RabbitMQ
-
-connection = pika.BlockingConnection(
-    pika.ConnectionParameters("localhost")
-)
-
-channel = connection.channel()
-
-# Create queue
-
-channel.queue_declare(
-    queue="document_reconstruction",
-    durable=True
-)
+logger.info("JSON files loaded")
+logger.info("Total documents: %s", len(documents))
+logger.info("Total pages: %s", len(pages))
+logger.info("Total extraction fields: %s", len(extraction_fields))
 
 
-# Message processing function
+def process_message(
+    ch,
+    method,
+    properties,
+    body: bytes
+) -> None:
+    """Process a document reconstruction message."""
 
-def process_message(ch, method, properties, body):
+    logger.info("%s received a message", consumer_name)
 
-    print(f"\n{consumer_name} received a message")
-
-    # Convert RabbitMQ message from JSON string to Python dictionary
+    # Convert RabbitMQ message to Python dictionary
     message = json.loads(body)
 
     document_id = message["documentId"]
 
-    print("\nReceived document ID:")
-    print(document_id)
+    logger.info("Received document ID: %s", document_id)
 
     # Find document
-
-    document_data = None
-
-    for document in documents:
-
-        if document.get("_id") == document_id:
-
-            document_data = document
-            break
-
+    document_data = find_document(
+        documents,
+        document_id
+    )
 
     if document_data is None:
-
-        print("Document not found")
+        logger.warning("Document not found")
 
         ch.basic_ack(
             delivery_tag=method.delivery_tag
@@ -74,142 +64,52 @@ def process_message(ch, method, properties, body):
 
         return
 
-    print("\nDocument found:")
-    print(document_data["_id"])
+    logger.info("Document found: %s", document_data["_id"])
 
     # Find pages
+    document_pages = find_pages(
+        pages,
+        document_id
+    )
 
-    document_pages = []
-
-    for page in pages:
-
-        if page.get("documentId") == document_id:
-
-            document_pages.append(page)
-
-    print("Pages found:",len(document_pages))
+    logger.info("Pages found: %s", len(document_pages))
 
     # Find extraction fields
+    document_fields = find_fields(
+        extraction_fields,
+        document_id
+    )
 
-    document_fields = []
-
-    for field in extraction_fields:
-
-        if field.get("documentId") == document_id:
-
-            document_fields.append(field)
-
-
-    print("Extraction fields found:",len(document_fields))
+    logger.info(
+    "Extraction fields found: %s",
+    len(document_fields)
+)
 
     # Build fields
-
-    fields = []
-
-    for extraction in document_fields:
-
-        field = {
-
-            "name": extraction.get("fieldName",""),
-
-            "type": extraction.get("fieldType",""),
-
-            "dataType": extraction.get("dataType",""),
-
-            "confidence": extraction.get("confidence",0),
-
-            "value": extraction.get("value",""),
-
-            "isCorrected": extraction.get("isCorrected",False)
-        }
-
-        fields.append(field)
+    fields = build_fields(
+        document_fields
+    )
 
     # Build pages
-
-    request_pages = []
-
-    for page in document_pages:
-
-        request_page = {
-
-            "id": page.get("_id",""),
-
-            "pageNumber": page.get("pageNumber",0),
-
-            "status": page.get("status",""),
-
-            "dpiRes": page.get("dpiRes",""),
-
-            "rotation": page.get("rotation","")
-        }
-
-        request_pages.append(request_page)
+    request_pages = build_pages(
+        document_pages
+    )
 
     # Build document
-
-    request_document = {
-
-        "id": document_data.get("_id",""),
-
-        "name": document_data.get("fileName",""),
-
-        "fileType": document_data.get("fileType",""),
-
-        "status": document_data.get("status",""),
-
-        "subStatus": document_data.get("subStatus",""),
-
-        "docType": document_data.get("docType",""),
-
-        "splitLevel": document_data.get("splitLevel","0"),
-
-        "alphaId": document_data.get("_id",""),
-
-        "fields": fields,
-
-        "pages": request_pages,
-
-        "documentExtractionStartDate":
-            document_data.get("documentExtractionStartDate",""),
-
-        "documentReceivedDate":document_data.get("documentReceivedDate",""),
-
-        "lastModifiedDate":
-            document_data.get("lastModifiedDate",""),
-
-        "sourceDocumentUrl":
-            document_data.get("sourceDocumentUrl", ""),
-
-        "isDocSigned":
-            document_data.get("isDocSigned",False),
-
-        "version":
-            document_data.get("version",1),
-
-        "docSigned":
-            document_data.get("docSigned",False),
-
-        "totalPages":
-            document_data.get("totalPages", 0)
-    }
+    request_document = build_document(
+        document_data,
+        fields,
+        request_pages
+    )
 
     # Build original request
-    
-
-    original_request = {
-        "requestId":
-            document_data.get("requestId",""),
-
-        "status":
-            document_data.get("status",""),
-
-        "documents": [request_document]
-    }
+    original_request = build_request(
+        document_data,
+        request_document
+    )
 
     # Print result
-
-    print("\nORIGINAL REQUEST BODY")
+    logger.info("ORIGINAL REQUEST BODY")
 
     print(
         json.dumps(
@@ -220,39 +120,23 @@ def process_message(ch, method, properties, body):
     )
 
     # Save result
-
-    output_file = f"reconstructed_{document_id}.json"
-
-    with open(output_file,"w") as file:
-
-        json.dump(
-          original_request,
-          file,
-          indent=2,
-          default=str
+    output_file = save_output(
+        document_id,
+        original_request
     )
 
-    print(f"\nReconstructed request saved to {output_file}!")
-    
+    logger.info(
+    "Reconstructed request saved to %s",
+    output_file
+)
+
     # Tell RabbitMQ message is done
-    
     ch.basic_ack(
         delivery_tag=method.delivery_tag
     )
 
-    print("Message processed successfully!")
+    logger.info("Message processed successfully!")
+
 
 # Start consuming
-
-
-channel.basic_consume(
-    queue="document_reconstruction",
-    on_message_callback=process_message
-)
-
-
-print("\nConsumer started")
-print("Waiting for messages...")
-
-
-channel.start_consuming()
+start_consumer(process_message)
